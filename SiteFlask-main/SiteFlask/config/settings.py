@@ -2,6 +2,18 @@ import os
 from dataclasses import dataclass
 from typing import List
 
+# Получаем ссылку из Vercel, если её нет — используем sqlite (для локального запуска)
+db_url = os.environ.get('DATABASE_URL')
+
+if db_url:
+    # Исправление для некоторых версий SQLAlchemy (postgres -> postgresql)
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(db_url)
+else:
+    # Локально на компе будет работать SQLite
+    engine = create_engine('sqlite:///content_platform.db')
+    
 @dataclass
 class AIConfig:
     """Конфигурация для AI моделей"""
