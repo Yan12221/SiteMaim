@@ -9,3 +9,4 @@ sqlalchemy
 flask-login
 gunicorn
 python-dotenv
+psycopg2-binary
