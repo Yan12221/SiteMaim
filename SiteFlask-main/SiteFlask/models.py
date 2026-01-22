@@ -6,30 +6,7 @@ from database import db
 from flask_login import UserMixin
 
 
-# 1. Пытаемся найти ссылку на базу (Neon/Postgres)
-# Vercel может называть её POSTGRES_URL или DATABASE_URL
-db_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
-
-if not db_url:
-    # 2. ЕСЛИ БАЗА НЕ НАЙДЕНА:
-    # Используем SQLite в оперативной памяти (:memory:).
-    # Это важно! Vercel не дает создавать файлы (content_platform.db),
-    # поэтому мы держим базу в RAM, чтобы сайт хотя бы открылся.
-    print("WARNING: Database URL not found, using SQLite in memory.")
-    db_url = 'sqlite:///:memory:'
-else:
-    # 3. ЕСЛИ БАЗА НАЙДЕНА:
-    # Исправляем формат ссылки для SQLAlchemy
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    
-    # Добавляем SSL (нужно для Neon) — если используешь psycopg2
-    # Если будет ошибка "SSL", можно убрать эту строчку
-    if '?' not in db_url:
-        db_url += "?sslmode=require"
-
-# Создаем движок
-engine = create_engine(db_url)
+engine = create_engine('sqlite:///:memory:') 
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
