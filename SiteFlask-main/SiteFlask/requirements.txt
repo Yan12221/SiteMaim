@@ -6,3 +6,6 @@ openai
 sqlalchemy.orm
 flask_sqlalchemy
 sqlalchemy
+flask-login
+gunicorn
+python-dotenv
