@@ -1,0 +1,168 @@
+:root {
+    --primary-gradientVK: linear-gradient(135deg, #0058fc 0%, #ffffff 100%);
+    --primary-gradient: linear-gradient(135deg, #f5f5f5 0%, lab(51.81% 15.18 -65.09) 100%);
+    --success-gradient: linear-gradient(135deg, #003cff 0%, #ffffff 100%);
+    --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+body {
+    background-color: #000000;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+/* Стили для темной темы */
+body.dark-mode {
+    background-color: #1a1d21 !important;
+    color: #e9ecef !important;
+}
+
+body.dark-mode .card {
+    background-color: #24282d !important;
+    border-color: #3d444b !important;
+    color: #fff !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+}
+
+body.dark-mode .card-header, 
+body.dark-mode .list-group-item {
+    background-color: transparent !important;
+    color: #ced4da !important;
+    border-color: #3d444b !important;
+}
+
+/* Фикс для календаря в темной теме */
+body.dark-mode .fc {
+    background-color: #24282d;
+    border-color: #3d444b;
+}
+body.dark-mode .fc-col-header-cell,
+body.dark-mode .fc-daygrid-day {
+    background-color: #24282d;
+    border: 1px solid #3d444b;
+}
+
+/* Чтобы текст в мутных подписях был читаемым */
+body.dark-mode .text-muted {
+    color: #adb5bd !important;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1.5rem;
+}
+
+.bg-light {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.1);
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+}
+
+.btn-success {
+    background: var(--success-gradient);
+    border: none;
+}
+
+.alert {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.rounded-circle {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.display-6 {
+    font-weight: 700;
+    background: var(--primary-gradientVK);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.error {
+    color: #ff0000;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.lead {
+    color: #64748b;
+    font-weight: 400;
+}
+
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.btn-group .btn {
+    flex: 1;
+}
+
+.btn-check:checked + .btn-outline-primary {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-check:checked + .btn-outline-info {
+    background-color: #0dcaf0;
+    color: white;
+}
+
+
+#calendar {
+    max-width: 100%;
+    margin: 0 auto;
+    height: 600px;
+}
+
+.fc-event { cursor: pointer; }

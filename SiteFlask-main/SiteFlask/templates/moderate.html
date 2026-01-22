@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">📋 Модерация контента</h2>
+    <div class="row" id="posts-container">
+        {% for post in posts %}
+        <div class="col-md-4 mb-4" id="card-{{ post.id }}">
+            <div class="card h-100 shadow-sm">
+                {% if post.image_url %}
+                <img src="{{ post.image_url }}" class="card-img-top" alt="Post Image" style="height: 200px; object-fit: cover;">
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ post.title }}</h5>
+                    <p class="card-text small text-muted">{{ post.text[:150] }}...</p>
+                    
+                    <div class="alert alert-light border">
+                        <small>📅 План: {{ post.publish_date.strftime('%d.%m.%Y в %H:%M') }}</small>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                    <button onclick="rejectPost({{ post.id }})" class="btn btn-outline-danger btn-sm">
+                        ❌ Удалить
+                    </button>
+                    <button onclick="approvePost({{ post.id }})" class="btn btn-success btn-sm">
+                        ✅ Опубликовать
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <h4 class="text-muted">Нет постов на проверку 🎉</h4>
+            <a href="/unified-dashboard" class="btn btn-primary mt-3">Создать новые</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+async function approvePost(id) {
+    const btn = document.querySelector(`#card-${id} .btn-success`);
+    btn.disabled = true;
+    btn.innerText = "⏳ Отправка...";
+
+    const res = await fetch(`/api/approve-post/${id}`, {method: 'POST'});
+    const data = await res.json();
+
+    if (data.success) {
+        // Убираем карточку красиво
+        document.getElementById(`card-${id}`).remove();
+    } else {
+        alert("Ошибка VK: " + data.error);
+        btn.disabled = false;
+        btn.innerText = "✅ Опубликовать";
+    }
+}
+
+async function rejectPost(id) {
+    if(!confirm("Точно удалить этот пост?")) return;
+    
+    const res = await fetch(`/api/reject-post/${id}`, {method: 'POST'});
+    if (res.ok) {
+        document.getElementById(`card-${id}`).remove();
+    }
+}
+</script>
+{% endblock %}

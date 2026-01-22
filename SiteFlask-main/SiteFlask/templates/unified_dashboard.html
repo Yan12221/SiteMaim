@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+
+{% block title %}Единая панель аналитики{% endblock %}
+
+{% block content %}
+<body class="{{ 'dark-mode' if current_user.theme_mode == 'dark' else '' }}">
+    <div class="container-fluid">
+        <!-- Заголовок -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <input type="hidden" id="js-vk-account-id" value="{{ selected_account_id }}">
+                        <h1 class="display-6 fw-bold mb-2">📊 Единая панель аналитики</h1>
+                        <p class="text-muted mb-0">Сводная статистика по всем вашим аккаунтам и кампаниям</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if charts.audience_chart %}
+                <img src="data:image/png;base64,{{ charts.audience_chart }}" alt="Audience Chart" class="img-fluid">
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Недостаточно данных</p>
+                </div>
+            {% endif %}
+        </div>
+        <!-- Основные метрики -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 bg-primary bg-gradient text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-white-50 mb-2">Активные аккаунты</h6>
+                                <h2 class="mb-0">{{ stats.total_accounts }}</h2>
+                            </div>
+                            <div class="icon-circle bg-white bg-opacity-25">
+                                <i class="fas fa-users fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-white-75">Всего подключено групп VK</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 bg-success bg-gradient text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-white-50 mb-2">Общая аудитория</h6>
+                                <h2 class="mb-0">{{ stats.total_followers|number_format }}</h2>
+                            </div>
+                            <div class="icon-circle bg-white bg-opacity-25">
+                                <i class="fas fa-user-friends fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-white-75">Подписчиков во всех группах</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 bg-info bg-gradient text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-white-50 mb-2">Общий охват</h6>
+                                <h2 class="mb-0">{{ stats.total_reach|number_format }}</h2>
+                            </div>
+                            <div class="icon-circle bg-white bg-opacity-25">
+                                <i class="fas fa-bullseye fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-white-75">За последние 30 дней</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 bg-warning bg-gradient text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-white-50 mb-2">Средний CTR</h6>
+                                <h2 class="mb-0">{{ stats.avg_ctr }}%</h2>
+                            </div>
+                            <div class="icon-circle bg-white bg-opacity-25">
+                                <i class="fas fa-chart-line fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-white-75">Коэффициент кликов</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Графики -->
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i>Динамика роста</h5>
+                    </div>
+                    <div class="card-body">
+                        <img src="data:image/png;base64,{{ charts.growth_chart }}" alt="Growth Chart" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-user-tag text-success me-2"></i>Портрет аудитории</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if charts.audience_chart %}
+                            <img src="data:image/png;base64,{{ charts.audience_chart }}" alt="Audience Chart" class="img-fluid">
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Нет данных для анализа аудитории</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Нижний ряд -->
+        <div class="row">
+            <!-- Активные кампании -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-rocket text-danger me-2"></i>Активные кампании</h5>
+                        <span class="badge bg-primary">{{ campaigns|length }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% if campaigns %}
+                        <div class="list-group list-group-flush">
+                            {% for campaign in campaigns %}
+                            <div class="list-group-item border-0 px-0 py-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">{{ campaign.name }}</h6>
+                                        <small class="text-muted">{{ campaign.theme }}</small>
+                                    </div>
+                                    <span class="badge bg-{{ 'success' if campaign.status == 'active' else 'secondary' }}">
+                                        {{ campaign.status }}
+                                    </span>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">Прогресс: {{ campaign.progress }}%</small>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-{{ 'success' if campaign.status == 'active' else 'secondary' }}" 
+                                            style="width: {{ campaign.progress }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye me-1"></i>{{ campaign.total_reach|number_format }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-heart me-1"></i>{{ campaign.total_engagement|number_format }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Нет активных кампаний</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Топ постов -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-crown text-warning me-2"></i>Топ постов</h5>
+                        <span class="badge bg-warning text-dark">Топ-{{ top_posts|length }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% if top_posts %}
+                        <div class="list-group list-group-flush">
+                            {% for post in top_posts %}
+                            <div class="list-group-item border-0 px-0 py-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-0 text-truncate" style="max-width: 70%;" title="{{ post.type|title }} пост">
+                                        {{ post.text }}
+                                    </h6>
+                                    <span class="badge bg-info">{{ post.engagement_score }} очков</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-heart text-danger me-1"></i>{{ post.likes }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-comment text-primary me-1"></i>{{ post.comments }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-share text-success me-1"></i>{{ post.shares }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye me-1"></i>{{ post.reach }}
+                                    </small>
+                                </div>
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-clock me-1"></i>{{ post.published_time|format_date }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Нет опубликованных постов</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- График вовлеченности -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar text-info me-2"></i>Эффективность контента</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if charts.engagement_chart %}
+                        <img src="{{ charts.engagement_chart }}" alt="Engagement Chart" class="img-fluid">
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Недостаточно данных для анализа</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+            <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+            <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ru.js'></script>
+
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt text-primary me-2"></i>Контент-план</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id='calendar'></div>
+            </div>
+        </div>
+        <div class="text-center py-5">
+            <button onclick="fetchFromVKAPI()" class="btn btn-primary">
+                <i class="fas fa-sync"></i> Обновить данные из VK
+            </button>
+        </div>
+      
+    </div>   
+</body>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+// Автообновление данных каждые 60 секунд
+function updateDashboard() {
+    fetch('/api/unified-stats')
+        .then(response => {
+            if (!response.ok) throw new Error('Not found');
+            return response.json();
+        })
+        .then(data => {
+            // Безопасное обновление (проверяем наличие ID на странице)
+            const updateEl = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = value.toLocaleString();
+            };
+
+            updateEl('total-reach', data.total_reach || 0);
+            updateEl('total-likes', data.total_likes || 0);
+            updateEl('total-posts', data.total_posts || 0);
+            updateEl('total-accounts', data.total_accounts || 0);
+        })
+        .catch(err => console.warn('Статистика пока не доступна:', err));
+}
+
+// Запускаем обновление при загрузке
+document.addEventListener('DOMContentLoaded', updateDashboard);
+
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+// Запускаем автообновление
+setInterval(updateDashboard, 60000);
+
+// Первое обновление через 5 секунд
+setTimeout(updateDashboard, 5000);
+
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ru', // Русский язык
+        firstDay: 1,  // Неделя начинается с понедельника
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        events: '/api/calendar-posts', // Ссылка на наш API из шага 1
+        
+        eventClick: function(info) {
+            if (info.event.url) {
+                window.location.href = info.event.url;
+                info.jsEvent.preventDefault();
+            }
+        },
+        // Красивое отображение времени
+        eventTimeFormat: { 
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false
+        }
+    });
+    
+    calendar.render();
+});
+const themeToggle = document.getElementById('theme-toggle');
+if (themeToggle) { // <--- ДОБАВИТЬ ЭТУ ПРОВЕРКУ
+    const body = document.body;
+    const icon = themeToggle.querySelector('i');
+
+    themeToggle.addEventListener('click', () => {
+       const isDark = body.classList.toggle('dark-mode');
+        const themeName = isDark ? 'dark' : 'light';
+        
+        // Меняем иконку на лету
+        if (isDark) {
+            icon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+            icon.classList.replace('fa-sun', 'fa-moon');
+        }
+        
+        // Отправляем в базу
+        fetch('/api/save-theme', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ theme: themeName })
+        }).then(res => {
+            if (!res.ok) console.error("Не удалось сохранить тему в БД");
+        });
+    });
+}
+
+function fetchFromVKAPI() {
+    // 1. Берем ID из скрытого поля
+    const accountIdField = document.getElementById('js-vk-account-id');
+    const currentAccountId = accountIdField ? accountIdField.value : null;
+
+    if (!currentAccountId || currentAccountId === 'None') {
+        alert('Не выбран аккаунт VK для обновления!');
+        return;
+    }
+    
+    // Показываем кнопку загрузки (если есть модалка loadingModal)
+    // Если модалки нет, можно просто изменить текст кнопки
+    const btn = document.querySelector('button[onclick="fetchFromVKAPI()"]');
+    if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Обновляем...';
+    }
+    
+    // 2. Делаем запрос к нашему исправленному API
+    fetch(`/api/vk/fetch/${currentAccountId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Данные успешно обновлены из VK!\n' + data.message);
+            // Перезагружаем страницу, чтобы увидеть новые цифры
+            location.reload(); 
+        } else {
+            alert('Ошибка при обновлении: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert('Ошибка соединения с сервером');
+    })
+    .finally(() => {
+        if(btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Обновить данные из VK';
+        }
+    });
+}
+</script>
+{% endblock %}

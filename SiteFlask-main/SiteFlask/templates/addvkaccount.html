@@ -1,0 +1,272 @@
+<!-- templates/add_vk_account.html -->
+{% extends "base.html" %}
+
+{% block title %}Добавить группу VK{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h1 class="h4 mb-0">
+                        <i class="fab fa-vk text-primary me-2"></i>Добавить группу VK
+                    </h1>
+                    <p class="text-muted mb-0">Подключите вашу группу ВКонтакте для отслеживания статистики</p>
+                </div>
+                <div class="card-body py-4">
+                    <form method="POST" action="{{ url_for('vk_add.add_vk_account') }}" id="vkAccountForm">
+                        <div class="mb-4">
+                            <h5 class="mb-3">Шаг 1: Получение Access Token</h5>
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Как получить Access Token:</h6>
+                                <ol class="mb-0">
+                                    <li>Перейдите в <a href="https://vk.com/apps?act=manage" target="_blank">Управление приложениями VK</a></li>
+                                    <li>Создайте новое приложение типа "Standalone"</li>
+                                    <li>В настройках приложения получите "Сервисный ключ доступа"</li>
+                                    <li>Скопируйте полученный токен в поле ниже</li>
+                                    <li>Также понадобится ID вашей группы (цифры в адресе сообщества)</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="mb-3">Шаг 2: Данные группы</h5>
+                            
+                            <div class="mb-3">
+                                <label for="group_id" class="form-label">ID группы VK *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="group_id" 
+                                       name="group_id"
+                                       placeholder="Например: 123456789"
+                                       required>
+                                <div class="form-text">Числовой ID вашей группы. Можно найти в адресе: vk.com/public<span class="text-danger">123456789</span></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="group_name" class="form-label">Название группы</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="group_name" 
+                                       name="group_name"
+                                       placeholder="Моя группа ВКонтакте">
+                                <div class="form-text">Если не указать, будет получено автоматически</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="access_token" class="form-label">Access Token *</label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="access_token" 
+                                       name="access_token"
+                                       placeholder="Введите ваш токен доступа"
+                                       required>
+                                <div class="form-text">Сервисный ключ доступа (service token) из настроек приложения VK</div>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    Активная группа (получать статистику автоматически)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Важно:</strong> Токен должен иметь следующие права доступа:
+                            <ul class="mb-0 mt-1">
+                                <li><code>stats</code> - доступ к статистике</li>
+                                <li><code>wall</code> - доступ к стене</li>
+                                <li><code>groups</code> - доступ к информации о группах</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('vk.vk_analytics') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Назад к аналитике
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-plus me-2"></i>Добавить группу
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Инструкция по получению токена -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-question-circle text-info me-2"></i>Подробная инструкция</h5>
+                </div>
+                <div class="card-body">
+                    <h6>1. Создание приложения VK</h6>
+                    <ol>
+                        <li>Войдите в ваш аккаунт VK</li>
+                        <li>Перейдите по ссылке: <a href="https://vk.com/apps?act=manage" target="_blank">ssilka</a></li>
+                        <li>Нажмите "Создать приложение"</li>
+                        <li>Выберите тип приложения: "Standalone"</li>
+                        <li>Заполните название приложения и нажмите "Подключить приложение"</li>
+                    </ol>
+                    
+                    <h6 class="mt-3">2. Получение токена</h6>
+                    <ol>
+                        <li>Перейдите по ссылке <a href="https://id.vk.com/auth?return_auth_hash=1717960e5f849702b1&redirect_uri=https%3A%2F%2Foauth.vk.com%2Fblank.html&redirect_uri_hash=ed80ba860105e8920a&force_hash=1&app_id=2685278&response_type=token&code_challenge=&code_challenge_method=&scope=335876&state=" target="_blank">ssilka</a></li>
+                        <li>Войдите в свою учетную запись</li>
+                        <li>Скопируйте "Access Token" в адресе</li>
+                        <li>Вставьте его в поле "Access Token" выше</li>
+                    </ol>
+                    
+                    <h6 class="mt-3">3. Получение ID группы</h6>
+                    <ol>
+                        <li>Перейдите в вашу группу VK</li>
+                        <li>Посмотрите в адресной строке URL</li>
+                        <li>Если адрес вида <code>vk.com/public123456789</code>, то ID = <code>123456789</code></li>
+                        <li>Если адрес с буквами, используйте сервисы для конвертации</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно загрузки -->
+<div class="modal fade" id="loadingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <h5>Добавляем группу...</h5>
+                <p class="mb-0 text-muted">Проверяем данные и подключаем к системе</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+document.getElementById('vkAccountForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Показываем модальное окно загрузки
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    // Отправляем форму
+    fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this)
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        
+        if (data.success) {
+            showAlert('Группа успешно добавлена! Переходим к настройке бизнеса...', 'success');
+            
+            // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+            // Вместо vk.vk_analytics перенаправляем на setup.business_setup
+            setTimeout(() => {
+                window.location.href = "{{ url_for('setup.business_setup') }}";
+            }, 1500);
+            // -----------------------
+            
+        } else {
+            showAlert('Ошибка: ' + (data.error || 'Неизвестная ошибка'), 'danger');
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        showAlert('Ошибка соединения с сервером', 'danger');
+    });
+});
+
+function showAlert(message, type) {
+    // ... ваш код showAlert (без изменений) ...
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHTML);
+    
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        if (alerts.length > 0) {
+            alerts[alerts.length - 1].remove();
+        }
+    }, 5000);
+}
+document.getElementById('vkAccountForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Показываем модальное окно загрузки
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    // Отправляем форму
+    fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this)
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        
+        if (data.success) {
+            showAlert('Группа успешно добавлена!', 'success');
+            setTimeout(() => {
+                window.location.href = "{{ url_for('vk.vk_analytics') }}";
+            }, 1500);
+        } else {
+            showAlert('Ошибка: ' + (data.error || 'Неизвестная ошибка'), 'danger');
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        showAlert('Ошибка соединения с сервером', 'danger');
+    });
+});
+
+function showAlert(message, type) {
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHTML);
+    
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        if (alerts.length > 0) {
+            alerts[alerts.length - 1].remove();
+        }
+    }, 5000);
+}
+
+// Функция проверки токена (опционально)
+function testToken() {
+    const token = document.getElementById('access_token').value;
+    const groupId = document.getElementById('group_id').value;
+    
+    if (!token || !groupId) {
+        alert('Заполните поля токена и ID группы');
+        return;
+    }
+    
+    // Здесь можно добавить проверку токена через VK API
+    // Это необязательный функционал
+}
+</script>
+{% endblock %}

@@ -1,0 +1,754 @@
+{% extends "base.html" %}
+<!-- Остальной контент страницы аналитики -->
+
+{% block title %}Аналитика VK{% endblock %}
+
+{% block content %}
+{% if not vk_accounts %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center py-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-5">
+                    <i class="fab fa-vk fa-4x text-muted mb-4"></i>
+                    <h2 class="mb-3">Подключите вашу группу VK</h2>
+                    <p class="text-muted mb-4">
+                        Для просмотра аналитики необходимо добавить хотя бы одну группу ВКонтакте
+                    </p>
+                    <a href="{{ url_for('vk_add.add_vk_account') }}">
+                        <i class="fas fa-plus me-2"></i>Добавить группу VK
+                    </a>
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Вам понадобится доступ к статистике группы и токен приложения VK
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Остальной контент страницы аналитики -->
+{% endif %}
+{% if vk_accounts %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center py-5">
+            <h2 class="mb-3">Подключите вашу группу VK</h2>
+            <p class="text-muted mb-4">
+                Вы можете добавить дополнительные группы ВКонтакте для анализа
+            </p>
+            <a href="{{ url_for('vk_add.add_vk_account') }}">
+                <i class="fas fa-plus me-2"></i>Добавить группу VK
+            </a>
+        </div>
+    </div>
+</div>
+{% else %}
+{% endif %}
+<div class="container-fluid">
+    <!-- Заголовок с выбором группы -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 fw-bold mb-2">
+                <i class="fab fa-vk fa-1x text-muted mb-4"></i>Аналитика VK
+            </h1>
+            <p class="text-muted mb-0">Подробная статистика по вашим группам ВКонтакте</p>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted d-block">Выбранная группа:</small>
+                            <select id="groupSelect" class="form-select form-select-sm border-0 bg-transparent" onchange="loadGroupStats(this.value)">
+                                {% for account in vk_accounts %}
+                                <option value="{{ account.id }}" {% if account.id == selected_account_id %}selected{% endif %}>
+                                    {{ account.group_name or ('Группа #' + account.group_id) }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshStats()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основные метрики в реальном времени -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted mb-2">Подписчики</h6>
+                            <h2 class="text-primary mb-0" id="followersCount">
+                                {{ current_stats.followers_count|number_format if current_stats else '0' }}
+                            </h2>
+                            <small class="text-success" id="followersGrowth">
+                                {% if current_stats and current_stats.followers_growth > 0 %}
+                                <i class="fas fa-arrow-up"></i> +{{ current_stats.followers_growth }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="icon-circle bg-primary bg-opacity-10">
+                            <i class="fas fa-users text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted mb-2">Охват</h6>
+                            <h2 class="text-success mb-0" id="reachCount">
+                                {{ current_stats.reach|number_format if current_stats else '0' }}
+                            </h2>
+                            <small class="text-muted">за 24 часа</small>
+                        </div>
+                        <div class="icon-circle bg-success bg-opacity-10">
+                            <i class="fas fa-eye text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted mb-2">Вовлеченность</h6>
+                            <h2 class="text-info mb-0" id="engagementCount">
+                                {{ current_stats.engagement|number_format if current_stats else '0' }}
+                            </h2>
+                            <small class="text-muted">лайки + комментарии + репосты</small>
+                        </div>
+                        <div class="icon-circle bg-info bg-opacity-10">
+                            <i class="fas fa-heart text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted mb-2">CTR</h6>
+                            <h2 class="text-warning mb-0" id="ctrValue">
+                                {% if current_stats and current_stats.reach > 0 %}
+                                {{ "%.1f"|format((current_stats.engagement / current_stats.reach * 100)|round(1)) }}%
+                                {% else %}0%{% endif %}
+                            </h2>
+                            <small class="text-muted">коэффициент кликов</small>
+                        </div>
+                        <div class="icon-circle bg-warning bg-opacity-10">
+                            <i class="fas fa-chart-line text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Графики аналитики -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i>Динамика охвата</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary active" onclick="changeChartPeriod(7)">7 дн</button>
+                        <button class="btn btn-outline-secondary" onclick="changeChartPeriod(30)">30 дн</button>
+                        <button class="btn btn-outline-secondary" onclick="changeChartPeriod(90)">90 дн</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="reachChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie text-success me-2"></i>Активность по типам</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" width="200" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Детальная статистика -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-users text-info me-2"></i>Демография аудитории</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Пол</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-male fa-2x text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Мужчины</span>
+                                        <span class="fw-bold" id="malePercent">
+                                            {% if current_stats %}{{ "%.0f"|format(current_stats.male_percentage or 50) }}{% else %}50{% endif %}%
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" style="width: {% if current_stats %}{{ current_stats.male_percentage or 50 }}{% else %}50{% endif %}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-female fa-2x text-danger"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Женщины</span>
+                                        <span class="fw-bold" id="femalePercent">
+                                            {% if current_stats %}{{ "%.0f"|format(current_stats.female_percentage or 50) }}{% else %}50{% endif %}%
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-danger" style="width: {% if current_stats %} {{ current_stats.female_percentage or 50 }} {% else %}50{% endif %}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Возраст</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>18-24 лет</small>
+                                    <small class="fw-bold" id="age1824">
+                                        {% if current_stats %}{{ "%.0f"|format(current_stats.age_18_24 or 25) }}{% else %}25{% endif %}%
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-info" style="width: {% if current_stats %}{{ current_stats.age_18_24 or 25 }}{% else %}25{% endif %}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>25-34 лет</small>
+                                    <small class="fw-bold" id="age2534">
+                                        {% if current_stats %}{{ "%.0f"|format(current_stats.age_25_34 or 25) }}{% else %}25{% endif %}%
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-success" style="width: {% if current_stats %}{{ current_stats.age_25_34 or 25 }}{% else %}25{% endif %}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>35-44 лет</small>
+                                    <small class="fw-bold" id="age3544">
+                                        {% if current_stats %}{{ "%.0f"|format(current_stats.age_35_44 or 25) }}{% else %}25{% endif %}%
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-warning" style="width: {% if current_stats %}{{ current_stats.age_35_44 or 25 }}{% else %}25{% endif %}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>45+ лет</small>
+                                    <small class="fw-bold" id="age45plus">
+                                        {% if current_stats %}{{ "%.0f"|format(current_stats.age_45_plus or 25) }}{% else %}25{% endif %}%
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-primary" style="width: {% if current_stats %}{{ current_stats.age_45_plus or 25 }}{% else %}25{% endif %}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-newspaper text-warning me-2"></i>Топ постов</h5>
+                    <small class="text-muted">за последние 7 дней</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Пост</th>
+                                    <th>Лайки</th>
+                                    <th>Комменты</th>
+                                    <th>Репосты</th>
+                                    <th>Охват</th>
+                                    <th>Просмотры</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topPostsTable">
+                                {% for post in top_posts %}
+                                <tr>
+                                    <td>
+                                        <small class="text-truncate d-block" style="max-width: 200px;" title="{{ post.text }}">
+                                            {{ post.text[:50] }}{% if post.text|length > 50 %}...{% endif %}
+                                        </small>
+                                        <small class="text-muted">{{ post.published_time|format_date if post.published_time else '' }}</small>
+                                    </td>
+                                    <td><span class="badge bg-danger">{{ post.likes }}</span></td>
+                                    <td><span class="badge bg-primary">{{ post.comments }}</span></td>
+                                    <td><span class="badge bg-success">{{ post.shares }}</span></td>
+                                    <td><span class="badge bg-info">{{ post.reach|number_format }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ post.views|number_format }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if not top_posts %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Нет данных о постах</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createPostModal">
+            <i class="fas fa-plus-circle me-2"></i>Создать публикацию
+        </button>
+
+        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#editDate">
+            <i class="fas fa-plus-circle me-2"></i>Даты публикации
+        </button>
+    </div>
+</div>
+    <!-- Кнопка обновления данных из VK API -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <button class="btn btn-primary" onclick="fetchFromVKAPI()">
+                        <i class="fas fa-sync-alt me-2"></i>Обновить данные из VK API
+                    </button>
+                    <small class="d-block text-muted mt-2">
+                        Последнее обновление: 
+                        <span id="lastUpdate">
+                            {% if current_stats %}{{ current_stats.created_at|format_date }}{% else %}никогда{% endif %}
+                        </span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно загрузки -->
+<div class="modal fade" id="loadingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <p class="mb-0">Обновляем данные из VK...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Модальное окно формы -->
+<div class="modal fade" id="createPostModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новая публикация в VK</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createPostForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Выберите группу:</label>
+                        <select class="form-select" name="vk_account_id" required>
+                            {% for account in vk_accounts %}
+                            <option value="{{ account.id }}">{{ account.group_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Промпт сообщения:</label>
+                        <textarea class="form-control" name="message" rows="4" placeholder="Введите текст поста..." required></textarea>
+                    </div>
+                <!--<div class="mb-3">
+                        <label class="form-label">Изображение (опционально):</label>
+                        <input type="file" class="form-control" name="image" accept="image/*">
+                    </div> -->
+                    <div class="mb-3">
+                        <div id="datesContainer">
+                            <div class="input-group mb-2 date-input-row">
+                                <input type="datetime-local" name="publish_dates[]" class="form-control" required>
+                                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addDateInput()">
+                            <i class="fas fa-plus me-1"></i> Добавить еще время
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">Опубликовать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editDate" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новая публикация в VK</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Даты публикации</label>
+                <div id="datesContainer">
+                    <div class="input-group mb-2 date-input-row">
+                        <input type="datetime-local" name="publish_dates[]" class="form-control" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addDateInput()">
+                    <i class="fas fa-plus me-1"></i> Добавить еще время
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addDateInput() {
+    const container = document.getElementById('datesContainer');
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2 date-input-row';
+    div.innerHTML = `
+        <input type="datetime-local" name="publish_dates[]" class="form-control" required>
+        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    container.appendChild(div);
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Глобальные переменные
+let currentGroupId = {{ selected_account_id or 0 }};
+let chartPeriod = 7;
+let reachChart = null;
+let activityChart = null;
+
+// Загрузка данных при выборе группы
+function loadGroupStats(groupId) {
+    currentGroupId = groupId;
+    window.location.href = `/vk-analytics?group_id=${groupId}`;
+}
+
+// Обновление статистики
+function refreshStats() {
+    if (!currentGroupId) return;
+    
+    fetch(`/api/vk/stats/${currentGroupId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.stats) {
+                updateStatsUI(data.stats);
+                updateCharts(data.chart_data);
+            }
+        })
+        .catch(error => console.error('Ошибка обновления:', error));
+}
+
+// Обновление данных из VK API
+function fetchFromVKAPI() {
+    if (!currentGroupId) {
+        alert('Выберите группу!');
+        return;
+    }
+    
+    // Показываем модальное окно загрузки
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    fetch(`/api/vk/fetch/${currentGroupId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        if (data.success) {
+            showAlert('Данные успешно обновлены из VK!', 'success');
+            refreshStats();
+        } else {
+            showAlert('Ошибка при обновлении: ' + (data.error || 'Неизвестная ошибка'), 'danger');
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        showAlert('Ошибка соединения', 'danger');
+    });
+}
+
+// Обновление UI статистики
+function updateStatsUI(stats) {
+    document.getElementById('followersCount').textContent = formatNumber(stats.followers_count);
+    document.getElementById('followersGrowth').innerHTML = stats.followers_growth > 0 ? 
+        `<i class="fas fa-arrow-up"></i> +${stats.followers_growth}` : '';
+    
+    document.getElementById('reachCount').textContent = formatNumber(stats.reach);
+    document.getElementById('engagementCount').textContent = formatNumber(stats.engagement);
+    
+    const ctr = stats.reach > 0 ? (stats.engagement / stats.reach * 100).toFixed(1) : 0;
+    document.getElementById('ctrValue').textContent = ctr + '%';
+    
+    // Демография
+    document.getElementById('malePercent').textContent = (stats.male_percentage || 50).toFixed(0) + '%';
+    document.getElementById('femalePercent').textContent = (stats.female_percentage || 50).toFixed(0) + '%';
+    document.getElementById('age1824').textContent = (stats.age_18_24 || 25).toFixed(0) + '%';
+    document.getElementById('age2534').textContent = (stats.age_25_34 || 25).toFixed(0) + '%';
+    document.getElementById('age3544').textContent = (stats.age_35_44 || 25).toFixed(0) + '%';
+    document.getElementById('age45plus').textContent = (stats.age_45_plus || 25).toFixed(0) + '%';
+    
+    // Время обновления
+    if (stats.created_at) {
+        const date = new Date(stats.created_at);
+        document.getElementById('lastUpdate').textContent = 
+            date.toLocaleString('ru-RU');
+    }
+}
+
+// Обновление графиков
+function updateCharts(chartData) {
+    if (!chartData) return;
+    
+    // График охвата
+    if (reachChart) {
+        reachChart.destroy();
+    }
+    
+    const reachCtx = document.getElementById('reachChart').getContext('2d');
+    reachChart = new Chart(reachCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.reach.labels || [],
+            datasets: [{
+                label: 'Охват',
+                data: chartData.reach.data || [],
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Круговая диаграмма активности
+    if (activityChart) {
+        activityChart.destroy();
+    }
+    
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    activityChart = new Chart(activityCtx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.activity.labels || ['Лайки', 'Комментарии', 'Репосты'],
+            datasets: [{
+                data: chartData.activity.data || [60, 25, 15],
+                backgroundColor: ['#dc3545', '#0d6efd', '#198754'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Изменение периода графика
+function changeChartPeriod(days) {
+    chartPeriod = days;
+    
+    // Обновляем активные кнопки
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Загружаем данные за новый период
+    fetch(`/api/vk/chart/${currentGroupId}?days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.chart_data) {
+                updateCharts(data.chart_data);
+            }
+        });
+}
+
+// Уведомления
+function showAlert(message, type) {
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHTML);
+    
+    // Автоудаление через 5 секунд
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        if (alerts.length > 0) {
+            alerts[alerts.length - 1].remove();
+        }
+    }, 5000);
+}
+
+// Форматирование чисел
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Загружаем начальные графики
+    if (currentGroupId) {
+        fetch(`/api/vk/chart/${currentGroupId}?days=${chartPeriod}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.chart_data) {
+                    updateCharts(data.chart_data);
+                }
+            });
+        
+        // Автообновление каждые 60 секунд
+        setInterval(refreshStats, 60000);
+    }
+});
+
+// Обработка формы создания поста
+document.getElementById('createPostForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+
+    // Показываем индикатор загрузки
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Публикуем...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('/api/vk/create-post', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            showAlert(`Публикация успешно создана! ID: ${result.post_id}`, 'success');
+            // Закрываем модальное окно и очищаем форму
+            bootstrap.Modal.getInstance(document.getElementById('createPostModal')).hide();
+            form.reset();
+            // Опционально: обновляем список постов
+            refreshStats();
+        } else {
+            showAlert(`Ошибка: ${result.error}`, 'danger');
+        }
+    } catch (error) {
+        showAlert('Сетевая ошибка при отправке запроса', 'danger');
+    } finally {
+        // Восстанавливаем кнопку
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+    }
+});
+function refreshData(id) {
+    fetch(`/api/vk/fetch/${id}`, { method: 'POST' })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            window.location.reload(); // Вот она, команда обновления страницы
+        }
+    });
+}
+</script>
+{% endblock %}

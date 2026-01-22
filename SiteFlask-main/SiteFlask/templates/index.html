@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Обзор кампании -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card border-0 bg-light">
+            <div class="card-body p-4">
+                <h1 class="display-6 mb-3">Campaign Manager</h1>
+                <p class="lead text-muted">Страница управления</p>
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary rounded-circle p-3 me-3">
+                                <i class="fas fa-bullseye text-white fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">{{ analytics.reach|number_format }}</h4>
+                                <small class="text-muted">Охват</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success rounded-circle p-3 me-3">
+                                <i class="fas fa-heart text-white fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">{{ analytics.engagement|number_format }}</h4>
+                                <small class="text-muted">Вовлеченность</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info rounded-circle p-3 me-3">
+                                <i class="fas fa-users text-white fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">+{{ analytics.new_followers }}</h4>
+                                <small class="text-muted">Новые подписчики</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning rounded-circle p-3 me-3">
+                                <i class="fas fa-chart-line text-white fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">{{ analytics.ctr }}%</h4>
+                                <small class="text-muted">CTR</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Настройка VK API -->
+   <!-- Настройка API -->
+<div class="col-md-6 mb-4">
+    <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0"><i class="fas fa-plug text-primary me-2"></i>Подключение к API</h5>
+        </div>
+        <div class="card-body">
+            <form id="apiSetupForm">
+                <!-- Переключатель типа токена -->
+                <div class="mb-3">
+                    <label class="form-label small text-uppercase text-muted fw-bold">Тип API</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="apiType" id="vkApi" value="vk" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="vkApi">
+                            <i class="fab fa-vk me-2"></i>VK API
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="apiType" id="telegramApi" value="telegram" autocomplete="off">
+                        <label class="btn btn-outline-info" for="telegramApi">
+                            <i class="fab fa-telegram me-2"></i>Telegram API
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Поле для токена -->
+                <div class="mb-3">
+                    <label class="form-label small text-uppercase text-muted fw-bold" id="tokenLabel">
+                        Access Token VK
+                    </label>
+                    <input type="text" class="form-control" id="apiToken" 
+                           placeholder="VK Access Token..." required>
+                    <div class="form-text">
+                        <span id="tokenHelp">
+                            Токен для доступа к API VK. Можно получить в 
+                            <a href="https://vk.com/dev/access_token" target="_blank">настройках приложения VK</a>
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Поле для ID группы/канала -->
+                <div class="mb-3">
+                    <label class="form-label small text-uppercase text-muted fw-bold" id="idLabel">
+                        ID группы
+                    </label>
+                    <input type="text" class="form-control" id="targetId" 
+                           placeholder="123456789" required>
+                    <div class="form-text" id="idHelp">
+                        Числовой ID группы VK (без знака минус)
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-link me-2"></i>Подключить API
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- Создание кампании -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="fas fa-robot text-success me-2"></i>AI Campaign Generator</h5>
+            </div>
+            <div class="card-body">
+                <form id="campaignForm">
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-bold">Тема кампании</label>
+                        <input type="text" class="form-control" id="campaignTheme" 
+                               placeholder="Технологии, Бизнес, Образование..." required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small text-uppercase text-muted fw-bold">Количество постов</label>
+                            <select class="form-select" id="postCount">
+                                <option value="3">3 поста</option>
+                                <option value="5" selected>5 постов</option>
+                                <option value="7">7 постов</option>
+                                <option value="10">10 постов</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small text-uppercase text-muted fw-bold">Период публикации</label>
+                            <select class="form-select" id="scheduleDays">
+                                <option value="7">7 дней</option>
+                                <option value="14" selected>14 дней</option>
+                                <option value="21">21 день</option>
+                                <option value="30">30 дней</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-rocket me-2"></i>Запустить AI кампанию
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Аналитика и графики -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="fas fa-chart-bar text-info me-2"></i>Аналитика эффективности</h5>
+            </div>
+            
+            <div class="card-body">
+                <canvas id="analyticsChart" width="400" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Уведомления -->
+<div id="alertContainer" class="mt-4"></div>
+
+<!-- Результаты кампании -->
+<div id="campaignResults" class="mt-4" style="display: none;">
+    <div class="card border-0 bg-light">
+        <div class="card-body">
+            <h5><i class="fas fa-list-check me-2"></i>Результаты кампании</h5>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// График аналитики
+const weeklyStats = {{ weekly_stats|tojson }};
+const ctx = document.getElementById('analyticsChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: weeklyStats.labels,
+        datasets: [
+            {
+                label: 'Охват',
+                data: weeklyStats.reach,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Вовлеченность',
+                data: weeklyStats.engagement,
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                tension: 0.4,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+           legend: {
+                position: 'top',
+            }
+        }
+    }
+});
+
+// Подключение VK API
+document.getElementById('vkSetupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        vk_token: document.getElementById('vkToken').value,
+        group_id: document.getElementById('groupId').value
+    };
+    
+    try {
+        const response = await fetch('/setup-vk', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+    } catch (error) {
+        showAlert('Ошибка подключения', 'danger');
+    }
+});
+
+// Создание кампании
+document.getElementById('campaignForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        theme: document.getElementById('campaignTheme').value,
+        post_count: parseInt(document.getElementById('postCount').value),
+        schedule_days: parseInt(document.getElementById('scheduleDays').value)
+    };
+    
+    if (!formData.theme.trim()) {
+        showAlert('Введите тему кампании', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/create-campaign', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showAlert(`Кампания "${data.campaign_theme}" успешно создана! Сгенерировано ${data.generated_posts} постов.`, 'success');
+            showCampaignResults(data);
+        } else {
+            showAlert('Ошибка создания кампании', 'danger');
+        }
+    } catch (error) {
+        showAlert('Ошибка при создании кампании', 'danger');
+    }
+});
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertId = 'alert-' + Date.now();
+    
+    const alertHTML = `
+        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertContainer.innerHTML = alertHTML;
+    
+    setTimeout(() => {
+        const alert = document.getElementById(alertId);
+        if (alert) alert.remove();
+    }, 5000);
+}
+
+function showCampaignResults(data) {
+    const resultsDiv = document.getElementById('campaignResults');
+    const contentDiv = document.getElementById('resultsContent');
+    
+    let resultsHTML = `
+        <div class="mb-3">
+            <strong>Тема:</strong> ${data.campaign_theme}<br>
+            <strong>Постов сгенерировано:</strong> ${data.generated_posts}
+        </div>
+        <div class="mt-3">
+            <h6>Детали публикации:</h6>
+            <pre class="bg-white p-3 border rounded" style="font-size: 0.9em;">${JSON.stringify(data.results, null, 2)}</pre>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = resultsHTML;
+    resultsDiv.style.display = 'block';
+}
+// Подключение API (VK/Telegram)
+document.getElementById('apiSetupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const apiType = document.querySelector('input[name="apiType"]:checked').value;
+    const token = document.getElementById('apiToken').value;
+    const targetId = document.getElementById('targetId').value;
+    
+    if (!token || !targetId) {
+        showAlert('Пожалуйста, заполните все поля', 'warning');
+        return;
+    }
+    
+    const formData = {
+        api_type: apiType,
+        token: token,
+        target_id: targetId
+    };
+    
+    try {
+        const response = await fetch('/setup-api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+        
+        // Если успешно, сохраняем в localStorage для удобства
+        if (data.status === 'success') {
+            localStorage.setItem(`${apiType}_token`, token);
+            localStorage.setItem(`${apiType}_target_id`, targetId);
+        }
+    } catch (error) {
+        showAlert('Ошибка подключения к серверу', 'danger');
+        console.error('API Setup Error:', error);
+    }
+});
+
+// Переключение между VK и Telegram
+document.querySelectorAll('input[name="apiType"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        updateApiFields(this.value);
+    });
+});
+
+function updateApiFields(apiType) {
+    const tokenInput = document.getElementById('apiToken');
+    const targetInput = document.getElementById('targetId');
+    const tokenLabel = document.getElementById('tokenLabel');
+    const idLabel = document.getElementById('idLabel');
+    const tokenHelp = document.getElementById('tokenHelp');
+    const idHelp = document.getElementById('idHelp');
+    
+    if (apiType === 'vk') {
+        // Настройки для VK
+        tokenLabel.textContent = 'Access Token VK';
+        tokenInput.placeholder = 'VK Access Token...';
+        tokenHelp.innerHTML = 'Токен для доступа к API VK. Можно получить в <a href="https://vk.com/dev/access_token" target="_blank">настройках приложения VK</a>';
+        
+        idLabel.textContent = 'ID группы';
+        targetInput.placeholder = '123456789';
+        idHelp.textContent = 'Числовой ID группы VK (без знака минус)';
+        
+    } else if (apiType === 'telegram') {
+        // Настройки для Telegram
+        tokenLabel.textContent = 'Bot Token Telegram';
+        tokenInput.placeholder = 'Bot Token...';
+        tokenHelp.innerHTML = 'Токен бота Telegram. Можно получить у <a href="https://t.me/BotFather" target="_blank">@BotFather</a>';
+        
+        idLabel.textContent = 'ID канала/чата';
+        targetInput.placeholder = '@channelname или -1001234567890';
+        idHelp.textContent = 'Имя канала (с @) или числовой ID (для приватных каналов)';
+    }
+    
+    // Загружаем сохраненные значения из localStorage
+    const savedToken = localStorage.getItem(`${apiType}_token`);
+    const savedTargetId = localStorage.getItem(`${apiType}_target_id`);
+    
+    if (savedToken) tokenInput.value = savedToken;
+    if (savedTargetId) targetInput.value = savedTargetId;
+    if (window[apiType + 'Config'] && window[apiType + 'Config'].token) {
+        tokenInput.value = window[apiType + 'Config'].token;
+        targetInput.value = window[apiType + 'Config'].target_id || 
+                           window[apiType + 'Config'].group_id || 
+                           window[apiType + 'Config'].channel_id;
+    }
+}
+
+// Инициализация полей при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    const defaultApiType = document.querySelector('input[name="apiType"]:checked').value;
+    updateApiFields(defaultApiType);
+});
+
+// Функция показа уведомлений (если еще нет)
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    if (!alertContainer) return;
+    
+    const alertId = 'alert-' + Date.now();
+    
+    const alertHTML = `
+        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertContainer.insertAdjacentHTML('afterbegin', alertHTML);
+    
+    setTimeout(() => {
+        const alert = document.getElementById(alertId);
+        if (alert) alert.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

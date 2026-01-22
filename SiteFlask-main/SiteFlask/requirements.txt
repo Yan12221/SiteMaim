@@ -1,0 +1,10 @@
+Flask
+vk-api
+requests
+python-dotenv
+openai
+sqlalchemy.orm
+flask_sqlalchemy
+sqlalchemy
+database
+models
