@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import json
 from database import db
 from flask_login import UserMixin
+from sqlalchemy import create_engine
 
 # Получаем ссылку из Vercel, если её нет — используем sqlite (для локального запуска)
 db_url = os.environ.get('DATABASE_URL')
